@@ -61,6 +61,7 @@ export const generateInvoice = async (req, res) => {
   //TODO: Amount in words
 
   const doc = new PDFDocument();
+  doc.fontSize(8);
   const filePath = path.join(
     process.cwd(),
     `/public/temp/Invoice_${invoiceDetails.invoiceNumber}.pdf`
@@ -72,10 +73,17 @@ export const generateInvoice = async (req, res) => {
 
   // Add seller, billing, and shipping details
   doc.text(
-    `Seller Details: ${sellerDetails.sellerName}, ${sellerDetails.sellerAddress}`,
+    `Seller Details: ${sellerDetails.sellerName}, ${sellerDetails.sellerAddress}, ${sellerDetails.sellerCity},${sellerDetails.sellerState},${sellerDetails.sellerPinCode}`,
     50,
     150
   );
+
+  doc.text(`PAN No: ${sellerDetails.sellerPanNumber}`, 450, 150);
+  doc.text(`GST No: ${sellerDetails.sellerGSTNumber}`, 450, 180);
+
+  doc.text(`Place of Supply: ${placeOfSupply}`, 450, 250);
+  doc.text(`Place of Delivery: ${placeOfDelivery}`, 450, 270);
+
   doc.text(
     `Billing Details: ${billingDetails.billingName}, ${billingDetails.billingAddress}`,
     50,
@@ -91,44 +99,43 @@ export const generateInvoice = async (req, res) => {
   doc.text(`Order No: ${orderDetails.orderNumber}`, 50, 300);
   doc.text(`Order Date: ${orderDetails.orderDate}`, 50, 320);
   doc.text(`Invoice No: ${invoiceDetails.invoiceNumber}`, 50, 340);
-  doc.text(`Invoice Date: ${invoiceDetails.invoiceDate}`, 50, 360);
+  doc.text(`Invoice Date: ${moment(Date.now()).format("YYYY-MM-DD")}`, 50, 360);
 
   // Add table headers
   doc.text("Description", 50, 400);
-  doc.text("Unit Price", 200, 400);
-  doc.text("Quantity", 300, 400);
-  doc.text("Discount", 400, 400);
-  doc.text("Net Amount", 450, 400);
-  doc.text("Tax Rate", 550, 400);
-  doc.text("Tax Amount", 650, 400);
-  doc.text("Total Amount", 750, 400);
+  doc.text("Unit Price", 180, 400);
+  doc.text("Quantity", 250, 400);
+  doc.text("Discount", 300, 400);
+  doc.text("Net Amount", 360, 400);
+  doc.text("Tax Rate", 400, 400);
+  doc.text("Tax Amount", 450, 400);
+  doc.text("Total Amount", 550, 400);
 
   // Add item details
   let y = 420;
   calculatedItems.forEach((item) => {
     doc.text(item.description, 50, y);
-    doc.text(Number(item.unitPrice).toFixed(2), 200, y);
-    doc.text(item.quantity, 300, y);
-    doc.text(Number(item.discount).toFixed(2), 400, y);
-    doc.text(Number(item.netAmount).toFixed(2), 450, y);
-    doc.text(Number(item.taxRate).toFixed(2), 550, y);
+    doc.text(Number(item.unitPrice).toFixed(2), 180, y);
+    doc.text(item.quantity, 250, y);
+    doc.text(Number(item.discount).toFixed(2), 300, y);
+    doc.text(Number(item.netAmount).toFixed(2), 360, y);
+    doc.text(item.taxRate, 400, y);
     doc.text(
-      (item.taxType === "CGST_SGST"
+      item.taxType === "CGST_SGST"
         ? item.taxAmount.CGST + item.taxAmount.SGST
-        : item.taxAmount.IGST
-      ).toFixed(2),
-      650,
+        : item.taxAmount.IGST,
+      450,
       y
     );
-    doc.text(moment(item.totalAmount.toFixed(2)), 750, y);
+    doc.text(item.totalAmount.toFixed(2), 550, y);
     y += 20;
   });
 
   // Add total row
   doc.text("Total", 50, y);
-  doc.text(totalRow.netAmount.toFixed(2), 450, y);
-  doc.text(totalRow.taxAmount.toFixed(2), 650, y);
-  doc.text(totalRow.totalAmount.toFixed(2), 750, y);
+  doc.text(Number(totalRow.netAmount).toFixed(2), 450, y);
+  doc.text(Number(totalRow.taxAmount).toFixed(2), 650, y);
+  doc.text(Number(totalRow.totalAmount).toFixed(2), 750, y);
 
   // TODO:Add amount in words
   // doc.text(`Amount in words: ${amountInWords}`, 50, y + 20);
